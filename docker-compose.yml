@@ -1,24 +1,35 @@
-version: "3.7"
-service:
+version: '3'
+
+services:
   database:
-    image: postgres
+    container_name: rustwebdev-postgres
     restart: always
+    image: postgres:latest
     env_file:
       - .env
-    ports:
-      - "5432:5432"
     volumes:
-      - data:/var/lib/postgresql/data
+      - rustwebdev-data:/var/lib/postgresql/data
+      - ./data/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+    ports:
+      - 5432:5432
+    networks:
+      - rustwebdev-network
   server:
+    restart: on-failure
+    container_name: rustwebdev-webservice
     build:
       context: .
       dockerfile: Dockerfile
-    env_file: .env
+      network: host
+    env_file:
+      - .env
     depends_on:
       - database
-    networks:
-      - default
     ports:
-      - "3030:3030"
-    volumes:
-      data:
+      - ":3030:3030"
+    networks:
+      - rustwebdev-network
+volumes:
+  rustwebdev-data:
+networks:
+  rustwebdev-network:
